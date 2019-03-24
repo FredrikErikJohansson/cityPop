@@ -9,6 +9,7 @@ export default class SearchScreen extends React.Component {
     this.state = {
       text: '',
       isLoading: false,
+      isLoadingCity: false,
       isLoaded: false,
       dataSource: null,
     }
@@ -18,8 +19,35 @@ export default class SearchScreen extends React.Component {
     title: 'CityPop',
   };
 
-  _onPressCity() {
-    console.log("You Pressed button");
+  //TODO: Solution to skip duplicating fetch code..
+  //      Fix Make country searches with country-code
+  //      Iceland shows hong kong first..
+  _onPressCity(cityName) {
+    const encodedValue = encodeURIComponent(cityName);
+
+    //fcode=PPLA == cities
+    //fcode=PPLC == capitals
+    //maxRows == number of wanted searchresults
+    let url = `http://api.geonames.org/searchJSON?name_equals='${encodedValue}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+    this.setState({
+      isLoadingCity: true,
+    })
+
+    return fetch(url)
+        .then( (response) => response.json() )
+        .then( (responseJson) => {
+            this.setState({
+              isLoading: false,
+              isLoaded: true,
+              isLoadingCity: false,
+              text: cityName,
+              dataSource: responseJson.geonames,
+            })
+        })
+
+      .catch((error) => {
+        console.log(error)
+      });
   }
 
   _onPressButtonSearch(title) {
@@ -27,10 +55,12 @@ export default class SearchScreen extends React.Component {
     //TODO: Add wrong input handler
 
     const encodedValue = encodeURIComponent(this.state.text);
+
     //fcode=PPLA == cities
     //fcode=PPLC == capitals
     //maxRows == number of wanted searchresults
     let url = `http://api.geonames.org/searchJSON?q='${encodedValue}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+
     this.setState({
       isLoading: true,
     })
@@ -98,13 +128,11 @@ export default class SearchScreen extends React.Component {
       let cities = this.state.dataSource.map((val, key) => {
         if(this.state.dataSource.length > 1) {
           return (
-            <View key={key}>
-            <TouchableHighlight onPress={this._onPressCity()} underlayColor="white">
-              <View style={styles.button}>
-                <Text style={styles.buttonText}>{val.name}</Text>
-              </View>
-            </TouchableHighlight>
+          <TouchableHighlight key={key} onPress={this._onPressCity.bind(this, val.name)} underlayColor="white">
+            <View style={styles.button}>
+              <Text style={styles.buttonText}>{val.name}</Text>
             </View>
+          </TouchableHighlight>
           )
         }
         else {
@@ -117,12 +145,23 @@ export default class SearchScreen extends React.Component {
         }
       });
 
-      return (
-        <View style={styles.container}>
-          <Text style={styles.header}>{this.state.text}</Text>
-          {cities}
-        </View>
-      );
+      if(this.state.isLoadingCity) {
+        return (
+          <View style={styles.container}>
+            <Text style={styles.header}>{this.state.text}</Text>
+            {cities}
+            <ActivityIndicator style={{ marginTop: 20 }}/>
+          </View>
+        );
+      }
+      else {
+        return (
+          <View style={styles.container}>
+            <Text style={styles.header}>{this.state.text}</Text>
+            {cities}
+          </View>
+        );
+      }
     }
   }
 }
