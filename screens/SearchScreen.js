@@ -1,5 +1,5 @@
 import React from 'react';
-import { KeyboardAvoidingView, View, StyleSheet ,Text , TextInput, TouchableOpacity, Image, ActivityIndicator, FlatList} from 'react-native';
+import { KeyboardAvoidingView, View, StyleSheet ,Text , TextInput, TouchableOpacity, Image, ActivityIndicator, TouchableHighlight} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export default class SearchScreen extends React.Component {
@@ -8,7 +8,8 @@ export default class SearchScreen extends React.Component {
     super(props);
     this.state = {
       text: '',
-      isLoading: true,
+      isLoading: false,
+      isLoaded: false,
       dataSource: null,
     }
   }
@@ -17,6 +18,10 @@ export default class SearchScreen extends React.Component {
     title: 'CityPop',
   };
 
+  _onPressCity() {
+    console.log("You Pressed button");
+  }
+
   _onPressButtonSearch(title) {
 
     //TODO: Add wrong input handler
@@ -24,13 +29,17 @@ export default class SearchScreen extends React.Component {
     const encodedValue = encodeURIComponent(this.state.text);
     //fcode=PPLA == cities
     //fcode=PPLC == capitals
-    let url = `http://api.geonames.org/searchJSON?q='${encodedValue}'&maxRows=10&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
-
+    //maxRows == number of wanted searchresults
+    let url = `http://api.geonames.org/searchJSON?q='${encodedValue}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+    this.setState({
+      isLoading: true,
+    })
     return fetch(url)
         .then( (response) => response.json() )
         .then( (responseJson) => {
             this.setState({
               isLoading: false,
+              isLoaded: true,
               dataSource: responseJson.geonames,
             })
         })
@@ -44,7 +53,7 @@ export default class SearchScreen extends React.Component {
     const { navigation } = this.props;
     const title = navigation.getParam('title', 'DUMMY');
 
-    if(this.state.isLoading)
+    if(!this.state.isLoading && !this.state.isLoaded)
     {
       return (
         <KeyboardAwareScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
@@ -67,10 +76,45 @@ export default class SearchScreen extends React.Component {
         </KeyboardAwareScrollView>
       )
     }
-    else {
+    else if(this.state.isLoading) {
+      return (
+        <KeyboardAwareScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.header}>SEARCH BY {title}</Text>
+          <View style={styles.searchbarBorder}>
+            <TextInput
+              style={styles.searchbar}
+              maxLength={24}
+              placeholder={"Enter a " + title.toLowerCase() + "..."}
+              onChangeText={(text) => this.setState({text})}
+              value={this.state.text}
+            />
+          </View>
+          <ActivityIndicator/>
+        </KeyboardAwareScrollView>
+      )
+    }
 
+    else {
       let cities = this.state.dataSource.map((val, key) => {
-        return <View key={key}><Text>{val.name}, {val.population}</Text></View>
+        if(this.state.dataSource.length > 1) {
+          return (
+            <View key={key}>
+            <TouchableHighlight onPress={this._onPressCity()} underlayColor="white">
+              <View style={styles.button}>
+                <Text style={styles.buttonText}>{val.name}</Text>
+              </View>
+            </TouchableHighlight>
+            </View>
+          )
+        }
+        else {
+          return (
+            <View style={styles.searchbarBorder} key={key}>
+              <Text style={styles.searchbar}>Population</Text>
+              <Text style={styles.populationText}>{val.population}</Text>
+            </View>
+          )
+        }
       });
 
       return (
@@ -91,9 +135,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    fontSize: 36,
-    marginLeft: 60,
-    marginRight: 60,
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginLeft: 40,
+    marginRight: 40,
     textAlign: 'center',
     marginTop: 80,
     marginBottom: 80,
@@ -106,13 +151,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C7C7CD',
   },
+  button: {
+    marginBottom: 2,
+    width: 260,
+    alignItems: 'center',
+    backgroundColor: '#00796b',
+  },
+  buttonText: {
+    padding: 20,
+    color: 'white'
+  },
   searchbar: {
     fontSize: 16,
-    textAlign: 'center',
-    //color: '#004c40',
+    textAlign: 'center'
   },
-  item: {
+  populationText: {
+    fontSize: 26,
     textAlign: 'center',
-    //color: '#004c40',
-  },
+  }
 });
