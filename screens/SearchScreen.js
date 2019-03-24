@@ -1,6 +1,7 @@
 import React from 'react';
 import { KeyboardAvoidingView, View, StyleSheet ,Text , TextInput, TouchableOpacity, Image, ActivityIndicator, TouchableHighlight} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getCountryCode } from '../assets/ISOconverter.js';
 
 export default class SearchScreen extends React.Component {
   //TODO Redux
@@ -48,18 +49,25 @@ export default class SearchScreen extends React.Component {
       .catch((error) => {
         console.log(error)
       });
-  }
+    }
 
   _onPressButtonSearch(title) {
 
-    //TODO: Add wrong input handler
 
-    const encodedValue = encodeURIComponent(this.state.text);
+    //TODO: Add wrong input handler
+    const encodedName = encodeURIComponent(this.state.text);
+    const encodedCountry = encodeURIComponent(getCountryCode(this.state.text.toLowerCase()));
 
     //fcode=PPLA == cities
     //fcode=PPLC == capitals
     //maxRows == number of wanted searchresults
-    let url = `http://api.geonames.org/searchJSON?q='${encodedValue}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+    let url;
+    if(title == 'CITY') {
+      url = `http://api.geonames.org/searchJSON?q='${encodedName}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+    }
+    else {
+      url = `http://api.geonames.org/searchJSON?q='${encodedName}'&maxRows=5&username=weknowit&featureCode=PPL&featureCode=PPLA&featureCode=PPLC&country='${encodedCountry}'`;
+    }
 
     this.setState({
       isLoading: true,
