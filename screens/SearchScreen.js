@@ -1,5 +1,15 @@
 import React from 'react';
-import { KeyboardAvoidingView, View, StyleSheet ,Text , TextInput, TouchableOpacity, Image, ActivityIndicator, TouchableHighlight} from 'react-native';
+import {
+  KeyboardAvoidingView,
+  View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  TouchableHighlight
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getCountryCode } from '../assets/ISOconverter.js';
 
@@ -9,9 +19,9 @@ export default class SearchScreen extends React.Component {
     super(props);
     this.state = {
       text: '',
-      isLoading: false,
-      isLoadingCity: false,
+      error: '',
       isLoaded: false,
+      isLoading: false,
       dataSource: null,
     }
   }
@@ -20,50 +30,31 @@ export default class SearchScreen extends React.Component {
     title: 'CityPop',
   };
 
-  //TODO: Solution to skip duplicating fetch code..
-  //      Fix Make country searches with country-code
-  //      Iceland shows hong kong first..
-  _onPressCity(cityName) {
-    const encodedValue = encodeURIComponent(cityName);
-
-    //fcode=PPLA == cities
-    //fcode=PPLC == capitals
-    //maxRows == number of wanted searchresults
-    let url = `http://api.geonames.org/searchJSON?name_equals='${encodedValue}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+  onPressCity(cityName) {
     this.setState({
-      isLoadingCity: true,
-    })
+      dataSource: this.state.dataSource.filter(x => x.name === cityName),
+      text: cityName,
+    });
+  }
 
-    return fetch(url)
-        .then( (response) => response.json() )
-        .then( (responseJson) => {
-            this.setState({
-              isLoading: false,
-              isLoaded: true,
-              isLoadingCity: false,
-              text: cityName,
-              dataSource: responseJson.geonames,
-            })
-        })
+  onPressButtonSearch(title) {
 
-      .catch((error) => {
-        console.log(error)
-      });
+    if(this.state.text == ''){
+      this.setState({
+        error: 'Enter a ' + title.toLowerCase() + '.',
+      })
+      return;
     }
 
-  _onPressButtonSearch(title) {
-
-
-    //TODO: Add wrong input handler
-    const encodedName = encodeURIComponent(this.state.text);
-    const encodedCountry = encodeURIComponent(getCountryCode(this.state.text.toLowerCase()));
+  const encodedName = encodeURIComponent(this.state.text);
+  const encodedCountry = encodeURIComponent(getCountryCode(this.state.text.toLowerCase()));
 
     //fcode=PPLA == cities
     //fcode=PPLC == capitals
     //maxRows == number of wanted searchresults
     let url;
     if(title == 'CITY') {
-      url = `http://api.geonames.org/searchJSON?q='${encodedName}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
+      url = `http://api.geonames.org/searchJSON?name_equals='${encodedName}'&maxRows=5&username=weknowit&featureCode=PPLA&featureCode=PPLC`;
     }
     else {
       url = `http://api.geonames.org/searchJSON?q='${encodedName}'&maxRows=5&username=weknowit&featureCode=PPL&featureCode=PPLA&featureCode=PPLC&country='${encodedCountry}'`;
@@ -72,7 +63,7 @@ export default class SearchScreen extends React.Component {
     this.setState({
       isLoading: true,
     })
-    return fetch(url)
+    fetch(url)
         .then( (response) => response.json() )
         .then( (responseJson) => {
             this.setState({
@@ -80,6 +71,12 @@ export default class SearchScreen extends React.Component {
               isLoaded: true,
               dataSource: responseJson.geonames,
             })
+            if(this.state.dataSource.length < 1) {
+              this.setState({
+                isLoaded: false,
+                error: 'No results found for ' + this.state.text + '.',
+                })
+            }
         })
 
       .catch((error) => {
@@ -105,7 +102,10 @@ export default class SearchScreen extends React.Component {
               value={this.state.text}
             />
           </View>
-          <TouchableOpacity onPress={() => this._onPressButtonSearch(title)}>
+          <Text style={styles.errorTextStyle}>
+            {this.state.error}
+          </Text>
+          <TouchableOpacity onPress={() => this.onPressButtonSearch(title)}>
           <Image
             style={{ width: 30, height: 30 }}
             source={require('../assets/icon_search.png')}
@@ -136,7 +136,7 @@ export default class SearchScreen extends React.Component {
       let cities = this.state.dataSource.map((val, key) => {
         if(this.state.dataSource.length > 1) {
           return (
-          <TouchableHighlight key={key} onPress={this._onPressCity.bind(this, val.name)} underlayColor="white">
+          <TouchableHighlight key={key} onPress={this.onPressCity.bind(this, val.name)} underlayColor="white">
             <View style={styles.button}>
               <Text style={styles.buttonText}>{val.name}</Text>
             </View>
@@ -153,23 +153,12 @@ export default class SearchScreen extends React.Component {
         }
       });
 
-      if(this.state.isLoadingCity) {
-        return (
-          <View style={styles.container}>
-            <Text style={styles.header}>{this.state.text}</Text>
-            {cities}
-            <ActivityIndicator style={{ marginTop: 20 }}/>
-          </View>
-        );
-      }
-      else {
-        return (
-          <View style={styles.container}>
-            <Text style={styles.header}>{this.state.text}</Text>
-            {cities}
-          </View>
-        );
-      }
+      return (
+        <View style={styles.container}>
+          <Text style={styles.header}>{this.state.text}</Text>
+          {cities}
+        </View>
+      );
     }
   }
 }
@@ -197,15 +186,18 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderWidth: 1,
     borderColor: '#C7C7CD',
+    borderRadius: 5
   },
   button: {
-    marginBottom: 2,
+    marginBottom: 8,
     width: 260,
     alignItems: 'center',
     backgroundColor: '#00796b',
+    borderRadius: 5
   },
   buttonText: {
-    padding: 20,
+    fontSize: 16,
+    padding: 10,
     color: 'white'
   },
   searchbar: {
@@ -215,5 +207,11 @@ const styles = StyleSheet.create({
   populationText: {
     fontSize: 26,
     textAlign: 'center',
+  },
+  errorTextStyle: {
+    fontSize: 15,
+    marginBottom: 15,
+    alignSelf: 'center',
+    color: 'red'
   }
 });

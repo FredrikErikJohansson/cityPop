@@ -6,13 +6,13 @@ export default class HomeScreen extends React.Component {
     title: 'CityPop',
   };
 
-  _onPressSearchCity() {
+  onPressSearchCity() {
     this.props.navigation.navigate('Search', {
               title: 'CITY',
             });
   }
 
-  _onPressSerchCountry() {
+  onPressSerchCountry() {
     this.props.navigation.navigate('Search', {
               title: 'COUNTRY',
             });
@@ -22,12 +22,12 @@ export default class HomeScreen extends React.Component {
     return (
       <View style={styles.container}>
         <Text style={styles.header}>CityPop</Text>
-        <TouchableHighlight onPress={this._onPressSearchCity.bind(this)} underlayColor="white">
+        <TouchableHighlight onPress={this.onPressSearchCity.bind(this)} underlayColor="white">
           <View style={styles.button}>
             <Text style={styles.buttonText}>SEARCH BY CITY</Text>
           </View>
         </TouchableHighlight>
-        <TouchableHighlight onPress={this._onPressSerchCountry.bind(this)} underlayColor="white">
+        <TouchableHighlight onPress={this.onPressSerchCountry.bind(this)} underlayColor="white">
           <View style={styles.button}>
             <Text style={styles.buttonText}>SEARCH BY COUNTRY</Text>
           </View>
@@ -52,13 +52,15 @@ const styles = StyleSheet.create({
     marginBottom: 80,
   },
   button: {
-    marginBottom: 4,
+    marginBottom: 8,
     width: 260,
     alignItems: 'center',
     backgroundColor: '#00796b',
+    borderRadius: 5
   },
   buttonText: {
-    padding: 20,
+    fontSize: 16,
+    padding: 10,
     color: 'white'
   }
 });
