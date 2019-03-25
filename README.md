@@ -8,7 +8,7 @@ On Android, use the Expo app to scan the QR code from your terminal to open your
 On iOS, follow on-screen instructions to get a link.
 
 Then run the following commands:
-
+```
 git clone https://github.com/FredrikErikJohansson/cityPop.git
 
 cd cityPop
@@ -16,3 +16,4 @@ cd cityPop
 npm install
 
 npm start
+```
