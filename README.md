@@ -4,8 +4,6 @@ Created using Expo
 
 ### How to run:
 Install the Expo client app on your iOS or Android phone and connect to the same wireless network as your computer.
-On Android, use the Expo app to scan the QR code from your terminal to open your project. 
-On iOS, follow on-screen instructions to get a link.
 
 Then run the following commands:
 ```
@@ -17,3 +15,5 @@ npm install
 
 npm start
 ```
+On Android, use the Expo app to scan the QR code from your terminal to open your project. 
+On iOS, follow on-screen instructions to get a link.
