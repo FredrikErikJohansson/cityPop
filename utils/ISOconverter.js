@@ -199,7 +199,7 @@ const isoCountries = {
   'solomon islands' : 'SB',
   'somalia' : 'SO',
   'south africa' : 'ZA',
-  'south georgia and sandwich isl.' : 'GS',
+  'south georgia and sandwich islands' : 'GS',
   'spain' : 'ES',
   'sri lanka' : 'LK',
   'sudan' : 'SD',

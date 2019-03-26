@@ -11,7 +11,7 @@ import {
   TouchableHighlight
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { getCountryCode } from '../assets/ISOconverter.js';
+import { getCountryCode } from '../utils/ISOconverter.js';
 
 export default class SearchScreen extends React.Component {
   //TODO Redux
@@ -39,9 +39,13 @@ export default class SearchScreen extends React.Component {
 
   onPressButtonSearch(title) {
 
-    if(this.state.text == ''){
+    //Handle wrong inputs
+    const regex = /^[^!-\/:-@\[-`{-~]*$/;
+    const noSpaceBegin = /^\S.*/;
+
+    if(this.state.text == '' || !regex.test(this.state.text) || !noSpaceBegin.test(this.state.text)){
       this.setState({
-        error: 'Enter a ' + title.toLowerCase() + '.',
+        error: 'Wrong input, enter a ' + title.toLowerCase() + '.',
       })
       return;
     }
@@ -88,6 +92,7 @@ export default class SearchScreen extends React.Component {
     const { navigation } = this.props;
     const title = navigation.getParam('title', 'DUMMY');
 
+    //SearchScreen GUI before search
     if(!this.state.isLoading && !this.state.isLoaded)
     {
       return (
@@ -114,6 +119,7 @@ export default class SearchScreen extends React.Component {
         </KeyboardAwareScrollView>
       )
     }
+    //SearchScreen GUI while waiting for fetch
     else if(this.state.isLoading) {
       return (
         <KeyboardAwareScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
@@ -121,7 +127,7 @@ export default class SearchScreen extends React.Component {
           <View style={styles.searchbarBorder}>
             <TextInput
               style={styles.searchbar}
-              maxLength={24}
+              maxLength={35}
               placeholder={"Enter a " + title.toLowerCase() + "..."}
               onChangeText={(text) => this.setState({text})}
               value={this.state.text}
@@ -131,8 +137,9 @@ export default class SearchScreen extends React.Component {
         </KeyboardAwareScrollView>
       )
     }
-
+    //Search result GUI
     else {
+      //cities GUI, diffrence between 1 city and multiple citis
       let cities = this.state.dataSource.map((val, key) => {
         if(this.state.dataSource.length > 1) {
           return (
@@ -152,7 +159,7 @@ export default class SearchScreen extends React.Component {
           )
         }
       });
-
+      //Final GUI for showing cities
       return (
         <View style={styles.container}>
           <Text style={styles.header}>{this.state.text}</Text>
